@@ -1,8 +1,13 @@
 import fs from 'fs';
+import path from 'path';
+import { fileURLToPath } from 'url';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 class ProductManager {
-  constructor(filePath) { 
-    this.path = filePath; 
+  constructor(filePath) {
+    this.path = path.resolve(__dirname, '..', filePath);
     this.products = [];
     this.loadProducts();
   }
@@ -31,7 +36,6 @@ class ProductManager {
   }
 
   addProduct(productData) {
-    // Validar campos requeridos
     const requiredFields = ['title', 'description', 'price', 'code', 'stock', 'category'];
     for (const field of requiredFields) {
       if (!productData[field]) {
@@ -39,7 +43,6 @@ class ProductManager {
       }
     }
     
-    // Validar que el código no exista
     const existingProduct = this.products.find(p => p.code === productData.code);
     if (existingProduct) {
       throw new Error(`El producto con código ${productData.code} ya existe`);
@@ -72,7 +75,7 @@ class ProductManager {
     const deletedProduct = this.products[productIndex];
     this.products.splice(productIndex, 1);
     this.saveProducts();
-    return deletedProduct; 
+    return deletedProduct;
   }
 }
 
