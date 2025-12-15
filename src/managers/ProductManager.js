@@ -8,7 +8,7 @@ const __dirname = path.dirname(__filename);
 class ProductManager {
   constructor(filePath) {
     this.path = path.resolve(__dirname, '..', '..', filePath);
-    console.log('DEBUG ProductManager: Ruta archivo:', this.path); // Para debug
+    console.log('DEBUG ProductManager: Ruta archivo:', this.path); 
     this.products = [];
     this.loadProducts();
   }

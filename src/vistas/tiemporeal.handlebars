@@ -38,7 +38,7 @@
     const listaProductos = document.getElementById('listaProductos');
     const mensajeError = document.getElementById('mensajeError');
 
-    // Función para mostrar productos
+    // Mostrar productos
     function mostrarProductos(productos) {
         if (productos.length === 0) {
             listaProductos.innerHTML = '<p>No hay productos disponibles.</p>';
@@ -86,16 +86,14 @@
         const formData = new FormData(e.target);
         const producto = Object.fromEntries(formData);
         
-        // Convertir tipos numéricos
         producto.price = parseFloat(producto.price);
         producto.stock = parseInt(producto.stock);
-        
-        // Emitir evento al servidor
+
         socket.emit('agregarProducto', producto);
         e.target.reset();
     });
 
-    // Manejar botones eliminar (usamos delegación de eventos)
+    // Manejar botones eliminar
     document.addEventListener('click', (e) => {
         if (e.target.classList.contains('btnEliminar')) {
             const productId = parseInt(e.target.dataset.id);
