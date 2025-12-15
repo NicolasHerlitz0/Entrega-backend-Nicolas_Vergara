@@ -14,9 +14,19 @@ const __dirname = path.dirname(__filename);
 const app = express();
 const PORT = 7070;
 
+// 1. Primero crear el servidor HTTP
 const httpServer = createServer(app);
-const io = new Server(httpServer);
 
+// 2. Configurar Socket.io CON path explícito
+const io = new Server(httpServer, {
+  path: '/socket.io',
+  cors: {
+    origin: "http://localhost:7070",
+    methods: ["GET", "POST"]
+  }
+});
+
+// 3. Configurar Handlebars
 app.engine('handlebars', engine({
     layoutsDir: path.join(__dirname, 'vistas/plantillas'),
     defaultLayout: 'principal'
@@ -29,9 +39,11 @@ app.use(express.urlencoded({ extended: true }));
 
 const productManager = new ProductManager('./data/products.json');
 
+// 4. IMPORTANTE: Rutas API ANTES de cualquier middleware que pueda interferir
 app.use('/api/products', productsRouter);
 app.use('/api/carts', cartsRouter);
 
+// 5. Rutas de vistas
 app.get('/', async (req, res) => {
     try {
         const productos = await productManager.getProducts();
@@ -58,11 +70,10 @@ app.get('/tiemporeal', async (req, res) => {
     }
 });
 
-// CONFIGURACIÓN COMPLETA DE SOCKET.IO
+// 6. Configuración Socket.io - Mantener igual
 io.on('connection', (socket) => {
     console.log('Cliente conectado:', socket.id);
 
-    // Enviar productos actuales al cliente que se conecta
     socket.on('solicitarProductos', async () => {
         try {
             const productos = await productManager.getProducts();
@@ -72,39 +83,25 @@ io.on('connection', (socket) => {
         }
     });
 
-    // Escuchar evento para agregar producto
     socket.on('agregarProducto', async (productoData) => {
         try {
-            // Agregar producto usando el ProductManager
             const nuevoProducto = await productManager.addProduct(productoData);
-            
-            // Obtener todos los productos actualizados
             const productos = await productManager.getProducts();
-            
-            // Emitir a TODOS los clientes conectados
             io.emit('productosActualizados', productos);
-            
             console.log('Producto agregado vía websocket:', nuevoProducto);
         } catch (error) {
             console.error('Error al agregar producto:', error);
-            // Enviar error solo al cliente que lo intentó
             socket.emit('errorAgregarProducto', error.message);
         }
     });
 
-    // Escuchar evento para eliminar producto
     socket.on('eliminarProducto', async (idProducto) => {
         try {
-            // Eliminar producto usando el ProductManager
             const productoEliminado = await productManager.deleteProduct(idProducto);
             
             if (productoEliminado) {
-                // Obtener todos los productos actualizados
                 const productos = await productManager.getProducts();
-                
-                // Emitir a TODOS los clientes conectados
                 io.emit('productosActualizados', productos);
-                
                 console.log('Producto eliminado vía websocket:', productoEliminado);
             } else {
                 socket.emit('errorEliminarProducto', 'Producto no encontrado');
@@ -120,8 +117,14 @@ io.on('connection', (socket) => {
     });
 });
 
+// 7. Ruta para verificar que socket.io.js se sirve
+app.get('/socket.io/socket.io.js', (req, res) => {
+    res.status(404).send('Socket.io debe servirse automáticamente');
+});
+
 httpServer.listen(PORT, () => {
     console.log(`Servidor en http://localhost:${PORT}`);
     console.log(`Inicio: http://localhost:${PORT}/`);
     console.log(`Tiempo real: http://localhost:${PORT}/tiemporeal`);
+    console.log(`Socket.io endpoint: http://localhost:${PORT}/socket.io/socket.io.js`);
 });

@@ -7,7 +7,8 @@ const __dirname = path.dirname(__filename);
 
 class ProductManager {
   constructor(filePath) {
-    this.path = path.resolve(__dirname, '..', filePath);
+    this.path = path.resolve(__dirname, '..', '..', filePath);
+    console.log('DEBUG ProductManager: Ruta archivo:', this.path); // Para debug
     this.products = [];
     this.loadProducts();
   }
@@ -16,12 +17,15 @@ class ProductManager {
     try {
       const data = fs.readFileSync(this.path, 'utf8');
       this.products = JSON.parse(data);
+      console.log('DEBUG ProductManager: Productos cargados:', this.products.length);
     } catch (error) {
+      console.log('DEBUG ProductManager: Archivo no encontrado, creando array vacío');
       this.products = [];
     }
   }
 
   saveProducts() {
+    console.log('DEBUG ProductManager: Guardando en:', this.path);
     fs.writeFileSync(this.path, JSON.stringify(this.products, null, 2));
   }
 
